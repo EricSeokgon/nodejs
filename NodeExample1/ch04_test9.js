@@ -1,10 +1,10 @@
 var fs = require('fs');
 
-fs.open('./output.txt', 'w', function (err, fd) {
+fs.open('./output.txt', 'r', function (err, fd) {
     if (err) throw err;
 
     var buf = new Buffer(10);
-    console.log('버퍼 차입 : %s', Buffer.isBuffer(buf));
+    console.log('버퍼 타입 : %s', Buffer.isBuffer(buf));
 
     fs.read(fd, buf, 0, buf.length, null, function (err, byteRead, buffer) {
         if (err) throw err;
