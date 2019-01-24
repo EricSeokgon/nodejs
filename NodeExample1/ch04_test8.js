@@ -1,6 +1,6 @@
 var fs = require('fs');
 
-fs.open('./output.txt', 'w', function (err, fs) {
+fs.open('./output.txt', 'w', function (err, fd) {
     if (err) throw err;
 
     var buf = new Buffer('안녕!\n');
