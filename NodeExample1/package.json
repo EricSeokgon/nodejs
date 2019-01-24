@@ -7,5 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "moment": "^2.24.0",
+    "winston": "^3.1.0",
+    "winston-daily-rotate-file": "^3.6.0"
+  }
 }
