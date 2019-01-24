@@ -6,7 +6,7 @@ console.log('첫 번째 버퍼의 문자열 : %s', buffer1.toString());
 var buffer2 = new Buffer('안녕 2!', 'utf8');
 console.log('두 번째 버퍼의 문자열 : %s', 'utf8');
 
-console.log('버퍼 객체의 타입 : %s', buffer2.toString());
+console.log('버퍼 객체의 타입 : %s', Buffer.isButter(buffer1));
 
 var byteLen = Buffer.byteLength(output);
 var str1 = buffer1.toString('utf8', 0, byteLen);
