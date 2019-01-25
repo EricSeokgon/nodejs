@@ -16,8 +16,26 @@ server.on('request', function (req, res) {
 
     var filename = 'house.png';
     var infile = fs.createReadStream(filename, {flags: 'r'});
-    infile.pipe(res);
+    var dilelength = 0;
+    var curlength = 0;
 
+    fs.stat(filename, function (err, stats) {
+        filelength = stats.size;
+    });
+    res.writeHead(200, {"Content-Type": "image/png"});
+    infile.on('readable', function () {
+        var chunk;
+        while (null != (chunk = infile.read())) {
+            console.log('읽어 들인 데이터 크디 : %d 바이트', chunk.length);
+            curlength += chunk.length;
+            res.write(chunk, 'utf8', function (err) {
+                console.log('파일 부분 쓰기 완료 : %d, 파일 크기 :  %d', curlength, filelength);
+                if (curlength >= filelength) {
+                    res.end();
+                }
+            });
+        }
+    });
 });
 server.on('close', function () {
     console.log('서버가 종료됩니다.');
