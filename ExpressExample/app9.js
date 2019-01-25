@@ -44,11 +44,6 @@ app.use('/', router);
 //오류 핸들러 모듈 사용
 var expressErrorHandler = require('express-error-handler');
 
-//등록되지 않은 패스에 대해 페이지 오류 응답
-/*app.all('*', function (req, res) {
-    res.status(404).send('<h1>ERROR = 페이지를 찾을 수 없습니다.</h1>');
-});*/
-
 //모든 router 처리 끝난 후 404 오류 페이지 처리
 var errorHandler = expressErrorHandler({
     static: {
