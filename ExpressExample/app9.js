@@ -41,10 +41,44 @@ router.route('/process/login').post(function (req, res) {
 // 라우터 객체를 app 객체에 등록
 app.use('/', router);
 
+//미들웨어에서 파라미터 확인
+app.use(function (req, res, next) {
+    console.log('첫 번째 미들웨어에서 요청을 처리함.');
+
+    var paramId = req.body.id || req.query.id;
+    var paramPassword = req.body.password || req.query.password;
+
+    res.writeHead('200', {'Content-Type': 'text/html;charset=utf8'});
+    res.write('<h1>Express 서버에서 응답한 결과입니다.</h1>');
+    res.write('<div><p>Param id :' + paramId + '</p></div>');
+    res.write('<div><p>Param password :' + paramPassword + '</p></div>');
+    res.end();
+});
+
+app.use('/', function (req, res, next) {
+    console.log('두 번째 미들웨어에서 요청을 처리함.');
+
+    res.writeHead('200', {'Content-Type': 'text/html;charset=utf8'});
+    res.end('<h1>Express 서버에서 ' + req.user + ' 가 응답한 결과입니다.</h1>');
+});
+//오류 핸들러 모듈 사용
+var expressErrorHandler = require('express-error-handler');
+
 //등록되지 않은 패스에 대해 페이지 오류 응답
 app.all('*', function (req, res) {
     res.status(404).send('<h1>ERROR = 페이지를 찾을 수 없습니다.</h1>');
 });
+
+//모든 router 처리 끝난 후 404 오류 페이지 처리
+var errorHandler = expressErrorHandler({
+    static: {
+        '404': './public/404.html'
+    }
+});
+
+app.use(expressErrorHandler.httpError(404));
+app.use(errorHandler);
+
 //Express 서버 시작
 http.createServer(app).listen(3000, function () {
     console.log('Express 서버가 3000번 포트에서 시작됨.');
