@@ -19,6 +19,9 @@ var req = http.request(opts, function (res) {
         console.log(resData);
     });
 });
+opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+req.data = "q=actor";
+opts.headers['Content-Length'] = req.data.length;
 
 req.on('error', function (err) {
     console.log('오류 발생 : ' + err.measure);
