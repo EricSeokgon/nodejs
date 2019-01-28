@@ -35,9 +35,9 @@ var mysql = require('mysql');
 //===== MySQL 데이터베이스 연결 설정 =====//
 var pool      =    mysql.createPool({
     connectionLimit : 10, 
-    host     : 'localhost',
-    user     : 'root',
-    password : 'admin',
+    host     : '210.114.225.171',
+    user     : 'test',
+    password : 'test',
     database : 'test',
     debug    :  false
 });
