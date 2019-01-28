@@ -1,14 +1,15 @@
 /**
  * 데이터베이스 사용하기
  *
- * 몽고디비에 연결하고 클라이언트에서 로그인할 때 데이터베이스 연결하도록 만들기
+ * 몽고디비에 사용자 추가하기
 
  * 웹브라우저에서 아래 주소의 페이지를 열고 웹페이지에서 요청
- *    http://localhost:3000/public/login.html
+ *    http://localhost:3000/public/adduser.html
  *
  * @date 2016-11-10
  * @author Mike
  */
+
 
 // Express 기본 모듈 불러오기
 var express = require('express')
@@ -18,14 +19,18 @@ var express = require('express')
 // Express의 미들웨어 불러오기
 var bodyParser = require('body-parser')
     , cookieParser = require('cookie-parser')
-    , static = require('serve-static');
-    //, errorHandler = require('errorhandler');
+    , static = require('serve-static')
+    , errorHandler = require('errorhandler');
 
 // 에러 핸들러 모듈 사용
 var expressErrorHandler = require('express-error-handler');
 
 // Session 미들웨어 불러오기
 var expressSession = require('express-session');
+
+// 몽고디비 모듈 사용
+var MongoClient = require('mongodb').MongoClient;
+
 
 // 익스프레스 객체 생성
 var app = express();
@@ -54,11 +59,8 @@ app.use(expressSession({
 }));
 
 
+
 //===== 데이터베이스 연결 =====//
-
-// 몽고디비 모듈 사용
-var MongoClient = require('mongodb').MongoClient;
-
 
 // 데이터베이스 객체를 위한 변수 선언
 var database;
@@ -79,6 +81,7 @@ function connectDB() {
         database = db;
     });
 }
+
 
 
 //===== 라우팅 함수 등록 =====//
@@ -132,6 +135,45 @@ router.route('/process/login').post(function(req, res) {
 
 });
 
+
+
+// 사용자 추가 라우팅 함수 - 클라이언트에서 보내오는 데이터를 이용해 데이터베이스에 추가
+router.route('/process/adduser').post(function(req, res) {
+    console.log('/process/adduser 호출됨.');
+
+    var paramId = req.body.id || req.query.id;
+    var paramPassword = req.body.password || req.query.password;
+    var paramName = req.body.name || req.query.name;
+
+    console.log('요청 파라미터 : ' + paramId + ', ' + paramPassword + ', ' + paramName);
+
+    // 데이터베이스 객체가 초기화된 경우, addUser 함수 호출하여 사용자 추가
+    if (database) {
+        addUser(database, paramId, paramPassword, paramName, function(err, result) {
+            if (err) {throw err;}
+
+            // 결과 객체 확인하여 추가된 데이터 있으면 성공 응답 전송
+            if (result && result.insertedCount > 0) {
+                console.dir(result);
+
+                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                res.write('<h2>사용자 추가 성공</h2>');
+                res.end();
+            } else {  // 결과 객체가 없으면 실패 응답 전송
+                res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+                res.write('<h2>사용자 추가  실패</h2>');
+                res.end();
+            }
+        });
+    } else {  // 데이터베이스 객체가 초기화되지 않은 경우 실패 응답 전송
+        res.writeHead('200', {'Content-Type':'text/html;charset=utf8'});
+        res.write('<h2>데이터베이스 연결 실패</h2>');
+        res.end();
+    }
+
+});
+
+
 // 라우터 객체 등록
 app.use('/', router);
 
@@ -161,6 +203,34 @@ var authUser = function(database, id, password, callback) {
 }
 
 
+
+//사용자를 추가하는 함수
+var addUser = function(database, id, password, name, callback) {
+    console.log('addUser 호출됨 : ' + id + ', ' + password + ', ' + name);
+
+    // users 컬렉션 참조
+    var users = database.collection('users');
+
+    // id, password, username을 이용해 사용자 추가
+    users.insertMany([{"id":id, "password":password, "name":name}], function(err, result) {
+        if (err) {  // 에러 발생 시 콜백 함수를 호출하면서 에러 객체 전달
+            callback(err, null);
+            return;
+        }
+
+        // 에러 아닌 경우, 콜백 함수를 호출하면서 결과 객체 전달
+        if (result.insertedCount > 0) {
+            console.log("사용자 레코드 추가됨 : " + result.insertedCount);
+        } else {
+            console.log("추가된 레코드가 없음.");
+        }
+
+        callback(null, result);
+
+    });
+}
+
+
 // 404 에러 페이지 처리
 var errorHandler = expressErrorHandler({
     static: {
@@ -172,6 +242,21 @@ app.use( expressErrorHandler.httpError(404) );
 app.use( errorHandler );
 
 
+//===== 서버 시작 =====//
+
+// 프로세스 종료 시에 데이터베이스 연결 해제
+process.on('SIGTERM', function () {
+    console.log("프로세스가 종료됩니다.");
+    app.close();
+});
+
+app.on('close', function () {
+    console.log("Express 서버 객체가 종료됩니다.");
+    if (database) {
+        database.close();
+    }
+});
+
 // Express 서버 시작
 http.createServer(app).listen(app.get('port'), function(){
     console.log('서버가 시작되었습니다. 포트 : ' + app.get('port'));
@@ -180,3 +265,4 @@ http.createServer(app).listen(app.get('port'), function(){
     connectDB();
 
 });
+
